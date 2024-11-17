@@ -2,7 +2,7 @@
 
 这段时间学习node 和 express，想着技术总得实践，就着手开发一直想做的斗地主了，做之前先实现了个聊天室是当作熟悉一下Websocket，后面一边上班，一边下班后写写，又实现了斗地主功能（包括建房、设房间密码、加入房间、开启游戏、游戏结算、颁发连胜奖章等）。
 
-#### 线上预览地址：http://jxtech.fun/#/
+#### 线上预览地址：http://gameHall.jxtech.fun/#/
 
 #### 功能分析于与设计
 
@@ -10,9 +10,13 @@
 
 #### 效果图
 
-![https://github.com/Fat2man/frontend-gameHall/blob/main/.image/1729554572302.png](https://github.com/Fat2man/frontend-gameHall/blob/main/.image/1729554572302.png)
+**PC端效果：**
 
-![https://github.com/Fat2man/frontend-gameHall/blob/main/.image/1729554600042.png](https://github.com/Fat2man/frontend-gameHall/blob/main/.image/1729554600042.png)
+![https://github.com/Fat2man/frontend-gameHall/blob/main/.image/1731816552922.jpg](https://github.com/Fat2man/frontend-gameHall/blob/main/.image/1731816552922.jpg)
+
+![https://github.com/Fat2man/frontend-gameHall/blob/main/.image/1731815429348.jpg](https://github.com/Fat2man/frontend-gameHall/blob/main/.image/1731815429348.jpg)
+
+![https://github.com/Fat2man/frontend-gameHall/blob/main/.image/1731815950460.jpg](https://github.com/Fat2man/frontend-gameHall/blob/main/.image/1731815950460.jpg)
 
 ![https://github.com/Fat2man/frontend-gameHall/blob/main/.image/1729554720382.png](https://github.com/Fat2man/frontend-gameHall/blob/main/.image/1729554720382.png)
 
@@ -22,10 +26,18 @@
 
 ![https://github.com/Fat2man/frontend-gameHall/blob/main/.image/1729555169095.png](https://github.com/Fat2man/frontend-gameHall/blob/main/.image/1729555169095.png)
 
-前端GitHub地址传送门：https://github.com/Fat2man/game-hall
+**移动端适配效果：**
 
-后端GitHub项目地址：https://github.com/Fat2man/backend-gameHall
+<div style="display: flex; justify-content: space-between;">
+   <img src="https://github.com/Fat2man/frontend-gameHall/blob/main/.image/90b6713d0550bed633dd7046a45ba64.jpg" alt="Image 2">
+   <img src="https://github.com/Fat2man/frontend-gameHall/blob/main/.image/1731816139070.jpg" alt="Image 1">
+   <img src="https://github.com/Fat2man/frontend-gameHall/blob/main/.image/1731816146515.jpg" alt="Image 2" >
+</div>
+
+##### <u>*目前移动端适配了登录、注册、大厅和聊天室，斗地主还没有适配*</u>
+
+前端GitHub项目地址：https://github.com/Fat2man/game-hall
+
+后端GitHub地址传送门：https://github.com/Fat2man/backend-gameHall
 
 需要改进的有很多，请大家可以多提提意见。后续我会不断改进，如果觉得还可以，请star，你们的star是我前进的动力。
-
-git remote set-url origin git@github.com:Fat2man/backend-gameHall.git

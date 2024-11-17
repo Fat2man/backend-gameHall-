@@ -271,5 +271,5 @@ io.on("connection", (socket) => { //为io实例添加处理事件
 });
 
 httpServer.listen(8000, () => {
-  console.log('api_server服务已经启动 http://182.92.108.102:8000')
+  console.log('api_server服务已经启动 http://8.140.238.198:8000')
 })

@@ -50,6 +50,6 @@ exports.login = (req, res) => {
 exports.uploadPicture = (req, res) => {
   res.send({
     status: 0,
-    imgUrl: 'http://182.92.108.102:8000/' + req.file.path
+    imgUrl: 'http://8.140.238.198:8000/' + req.file.path
   })
 }
