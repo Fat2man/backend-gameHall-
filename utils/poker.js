@@ -306,7 +306,7 @@ function playTurn(id, cards, playHistory) {
 //   })
 // }
 const db = require('../db/index')  //连接数据库
-async function calculateScore(winner, losers) { // 异步函数处理事务，游戏结束，计算得分  
+async function calculateScore(winner, losers) { // 异步函数处理事务，游戏结算  
   const connection = await db.getConnection();
   try {
     // 开始事务
