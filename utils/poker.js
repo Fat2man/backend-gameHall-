@@ -162,12 +162,9 @@ function getFourWithTwo(cards) {
   cards.forEach(card => {
     cardCounts[card] = (cardCounts[card] || 0) + 1;
   });
-  console.log("🚀 ~ getFourWithTwo ~ cardCounts:", cardCounts)
   const fours = Object.keys(cardCounts).filter(card => cardCounts[card] === 4);
-  console.log("🚀 ~ fours ~ fours:", fours)
   if (fours.length === 0) return null; // 至少需要一组四张牌
   const remainingCards = cards.filter(card => cardCounts[card] < 4);
-  console.log("🚀 ~ getFourWithTwo ~ remainingCards:", remainingCards)
   if (remainingCards.length < 2) return null; // 需要至少两张带出的牌
   return { type: CARD_TYPES.FOUR_WITH_TWO, rank: fours[0] }; // 返回四带二的牌型
 }
@@ -221,11 +218,8 @@ function getPlaneType(cards) {
 }
 // 比较牌大小
 function compareCards(currentPlay, lastPlay) {
-  console.log("🚀 ~ compareCards ~ currentPlay, lastPlay:", currentPlay, lastPlay)
   const currentType = getCardType(currentPlay);
-  console.log("🚀 ~ compareCards ~ currentType:", currentType)
   const lastType = getCardType(lastPlay);
-  console.log("🚀 ~ compareCards ~ lastType:", lastType)
   if (lastType.type === CARD_TYPES.INVALID && currentType.type !== CARD_TYPES.INVALID) {
     if (currentType.type === 'single' || currentType.type === 'pair') {   //如果为单张为对子，直接返回。否则返回‘follow’供前端播放“管上（压死）”语音 
       return { flag: currentType.rank > lastType.rank, type: currentType.type === 'single' ? currentType.rank : `${currentType.rank}${currentType.rank}` }   //返回具体的牌值供前端语音播报
@@ -264,9 +258,7 @@ function getPreviousPlay(playHistory) {
 // 轮流出牌
 function playTurn(id, cards, playHistory) {
   cards.sort((a, b) => getCardValue(b) - getCardValue(a));
-  console.log("🚀 ~ playTurn ~ cards, playHistory:", cards, playHistory)
   const previousPlay = getPreviousPlay(playHistory); // 获取上一手牌
-  console.log("🚀 ~ playTurn ~ previousPlay:", previousPlay)
   const { flag, type } = compareCards(cards, previousPlay?.obj ?? [])
   if (previousPlay?.id !== id && !flag) {
     return { flag: false, type }  //出牌失败
@@ -274,48 +266,87 @@ function playTurn(id, cards, playHistory) {
     return { flag: true, type }   //出牌成功
   }
 }
-const db = require('../db/index')  //连接数据库
-function calculateScore(winner, score, losers) {  //游戏结束，计算得分  
-  const sqlStr = 'select score from ev_users where username in (?,?,?)'
-  const player = [winner].concat(losers)
-  return new Promise((resolve, reject) => {
-    db.query(sqlStr, player, (err, results) => {
-      console.log("🚀 ~ db.query1 ~ results:", results)
-      if (err) return reject(err)
-      if (results.length !== 3) return reject('获取玩家信息失败')
-      const params = [
-        winner, results[0].score + score,
-        losers[0], results[1].score - score,
-        losers[1], results[2].score - score,
-        winner, losers[0], losers[1]
-      ];
-      console.log("🚀 ~ db.query ~ params:", params)
-      const sqlStr1 = `
-        UPDATE ev_users SET score = CASE username
-        WHEN ? THEN ?
-        WHEN ? THEN ?
-        WHEN ? THEN ?
-        ELSE score
-        END
-        WHERE username IN (?, ?, ?);
-      `;
-      db.query(sqlStr1, params, (err, results) => {
-        console.log("🚀 ~ db.query2 ~ results:", results)
-        if (err) return reject(err)
-        if (results.affectedRows !== 3) return reject('数据更新失败！')
-        const sqlStr2 = `SELECT * FROM ev_users WHERE username in (?,?,?)`;
-        db.query(sqlStr2, player, (err, results) => {
-          console.log("🚀 ~ db.query3 ~ results:", results)
-          if (err) return reject(err)
-          if (results.length !== 3) return reject('数据查询失败！')
-          resolve(results)
-        })
-      })
-    })
-  })
-}
 
-console.log(deal(), 'deal')
+// function calculateScore(winner, losers) {
+//   const sqlStr = 'select score from ev_users where username in (?,?,?)'
+//   const player = [winner].concat(losers)
+//   return new Promise((resolve, reject) => {
+//     db.query(sqlStr, player, (err, results) => {
+//       console.log("🚀 ~ db.query1 ~ results:", results)
+//       if (err) return reject(err)
+//       if (results.length !== 3) return reject('获取玩家信息失败')
+//       const params = [
+//         winner, results[0].score + 1000,
+//         losers[0], results[1].score - 500,
+//         losers[1], results[2].score - 500,
+//         winner, losers[0], losers[1]
+//       ];
+//       const sqlStr1 = `
+//         UPDATE ev_users SET score = CASE username
+//         WHEN ? THEN ?
+//         WHEN ? THEN ?
+//         WHEN ? THEN ?
+//         ELSE score
+//         END
+//         WHERE username IN (?, ?, ?);
+//       `;
+//       db.query(sqlStr1, params, (err, results) => {
+//         console.log("🚀 ~ db.query2 ~ results:", results)
+//         if (err) return reject(err)
+//         if (results.affectedRows !== 3) return reject('数据更新失败！')
+//         const sqlStr2 = `SELECT * FROM ev_users WHERE username in (?,?,?)`;
+//         db.query(sqlStr2, player, (err, results) => {
+//           console.log("🚀 ~ db.query3 ~ results:", results)
+//           if (err) return reject(err)
+//           if (results.length !== 3) return reject('数据查询失败！')
+//           resolve(results)
+//         })
+//       })
+//     })
+//   })
+// }
+const db = require('../db/index')  //连接数据库
+async function calculateScore(winner, losers) { // 异步函数处理事务，游戏结束，计算得分  
+  const connection = await db.getConnection();
+  try {
+    // 开始事务
+    await connection.beginTransaction();
+    const sqlStr1 = 'select score from ev_users where username in (?,?,?)'
+    const player = [winner].concat(losers)
+    const players = [winner].concat(losers)
+    const results = await db.query(sqlStr1, player)
+    const params = [
+      winner, results[0].score + 1000,
+      losers[0], results[1].score - 500,
+      losers[1], results[2].score - 500,
+      winner, losers[0], losers[1]
+    ];
+    // 执行第一个查询
+    await connection.query('SELECT score FROM ev_users WHERE username in (?,?,?)', players);
+    const sqlStr2 = `
+      UPDATE ev_users SET score = CASE username
+      WHEN ? THEN ?
+      WHEN ? THEN ?
+      WHEN ? THEN ?
+      ELSE score
+      END
+      WHERE username IN (?, ?, ?);
+    `;
+    // 执行第二个查询
+    await connection.query(sqlStr2, params);
+    const result = await connection.query(`SELECT * FROM ev_users WHERE username in (?,?,?)`, players);
+    // 提交事务
+    await connection.commit();
+    return result
+  } catch (err) {
+    // 如果发生错误，回滚事务
+    await connection.rollback();
+    res.cc(err)
+  } finally {
+    // 确保释放连接
+    connection.release();
+  }
+}
 module.exports = { deal, getCardValue, playTurn, calculateScore }  //发牌 排序
 
 

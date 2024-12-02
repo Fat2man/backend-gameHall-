@@ -4,13 +4,14 @@ const { Server } = require("socket.io");  //引入socket.io 的Server类，用�
 const app = express()
 const cors = require('cors')
 const joi = require('joi')
-const userRouter = require('./router/user')
+
 const userinfoRounter = require('./router/userinfo')
 // const pokerRouter = require('./router/poker')
 const expressJwt = require('express-jwt')//只要成功配置了express-jwt 中间件，就可以把解析出来的用户信息，挂载到req.user属性
 const config = require('./config/config')
 const { deal, getCardValue, playTurn, calculateScore } = require('./utils/poker');  //发牌
 const { json } = require('express');
+const object = require('@hapi/joi/lib/types/object');
 app.use(cors())
 app.use(express.urlencoded({ extended: false }))
 app.use((req, res, next) => {
@@ -22,6 +23,7 @@ app.use((req, res, next) => {
   }
   next()
 })
+const userRouter = require('./router/user')
 app.use('/public', express.static('/'));
 app.use('/uploads', express.static('uploads'));
 app.use(expressJwt({ secret: config.jwtSecretKey }).unless({ path: [/^\/api/] }))
@@ -30,7 +32,6 @@ app.use('/my', userinfoRounter)
 // app.use('/poker', pokerRouter)
 app.use((err, req, res, next) => {
   if (err instanceof joi.ValidationError) return res.cc(err)
-  console.log(err, 'req.user11');
   if (err.name === 'UnauthorizedError') return res.cc('身份认证失败！请重新登录', 2)  //status 为2是token 失效
   res.cc(err)
 })
@@ -45,7 +46,6 @@ const rooms = {} //房间列表
 const playHistory = {}  //每个房间玩家出牌历史记录
 let timer  // timer 倒计时变量  
 io.on("connection", (socket) => { //为io实例添加处理事件
-  console.log('新用户连接了');
   socket.on('send', data => {
     io.emit('news', data)
   })
@@ -54,7 +54,6 @@ io.on("connection", (socket) => { //为io实例添加处理事件
     if (data) {
       userList[socket.id] = data
     }
-    console.log(userList, 'userList');
     io.emit('usersList', userList)
     io.emit('news', { msg: `${data.username}加入了群聊`, username: 'systemMsg' })
   })
@@ -83,7 +82,6 @@ io.on("connection", (socket) => { //为io实例添加处理事件
   })
   socket.on('getRoomUser', () => {  //获取房间成员信息
     io.emit('roomUser', rooms[socket.roomName])
-    console.log(rooms, 'rooms[socket.roomName]')
   })
   socket.on('leaveRoom', () => {
     //离开房间
@@ -196,13 +194,10 @@ io.on("connection", (socket) => { //为io实例添加处理事件
   socket.on("playPoker", (obj) => {  //出牌
     let gameRoom = rooms[socket.roomName]
     const { flag, type } = playTurn(gameRoom[socket.id].userName, obj, playHistory[socket.roomName])
-    console.log("🚀 ~ socket.on ~ type:", type)
-    console.log("🚀 ~ socket.on ~ flag:", flag)
     if (flag) {
       gameRoom[socket.id].poker = gameRoom[socket.id].poker.filter(item => !obj.includes(item))
       gameRoom[socket.id].countdown = 0
       gameRoom[socket.id].lastPoker = obj
-      console.log("🚀 ~ socket.on ~ gameRoom[socket.id].lastPoker:", gameRoom[socket.id].lastPoker)
       playHistory[socket.roomName].push({ id: gameRoom[socket.id].userName, obj })  //出牌历史记录里面添加当前出牌组合
       io.to(socket.roomName).emit('audio', 'play')
       io.to(socket.roomName).emit('audio', type)
@@ -216,33 +211,37 @@ io.on("connection", (socket) => { //为io实例添加处理事件
     io.to(socket.roomName).emit('audio', 'pass')
     io.to(socket.roomName).emit("playToClient", rooms[socket.roomName])
   })
-  socket.on("overToServer", async ({ winner, score, losers }) => {  //游戏结束
-    console.log("🚀 ~ socket.on ~ winner, score,losers:", winner, score, losers)
+  socket.on("overToServer", async () => {  //游戏结束
+    let winner, losers = []
     clearInterval(timer)   //停止计时
     try {
-      const result = await calculateScore(winner, score, losers)
-      io.to(socket.roomName).emit('audio', 'win')
       for (let key in rooms[socket.roomName]) {
         let player = rooms[socket.roomName][key]
         player.baseScore = 15
         player.multiplier = 480
-        result.map(item => {
-          if (item.username === player.userName) player.score = item.score
-        })
-        if (player.userName === winner) {   //记录连胜情况
+        if (player.poker.length === 0) {   //记录连胜情况
+          io.to(socket.id).emit('audio', 'win')
+          winner = player.userName
           player.winStreak ? player.winStreak += 1 : player.winStreak = 1
           player.landlord ? player.settleScore = '+1000' : player.settleScore = '+500'
         } else {
+          io.to(socket.id).emit('audio', 'lose')
+          losers.push(player.userName)
           player.winStreak = 0
           player.landlord ? player.settleScore = '-1000' : player.settleScore = '-500'
         }
       }
+      const result = await calculateScore(winner, losers)
+      for (let key in rooms[socket.roomName]) {
+        let player = rooms[socket.roomName][key]
+        result.map(item => {
+          if (item.username === player.userName) player.score = item.score
+        })
+      }
       io.to(socket.roomName).emit('overToClient', winner, rooms[socket.roomName])
-      console.log("🚀 ~ socket.on ~ result:", result)
-    } catch (error) {
-      console.log("🚀 ~ socket.on ~ error:", error)
+    } catch (err) {
+      res.cc(err)
     }
-    console.log("🚀 ~ socket.on ~ rooms[socket.roomName]:", rooms[socket.roomName])
   })
   socket.on("continueGame", () => {
     rooms[socket.roomName][socket.id].poker = []  //清空玩家手牌
