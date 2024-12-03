@@ -265,7 +265,6 @@ io.on("connection", (socket) => { //为io实例添加处理事件
       }
       io.emit("roomUser", rooms[socket.roomName]) //向用户端更新最新房间数据
     }
-
   })
 });
 
