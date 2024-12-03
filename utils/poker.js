@@ -266,45 +266,6 @@ function playTurn(id, cards, playHistory) {
     return { flag: true, type }   //出牌成功
   }
 }
-
-// function calculateScore(winner, losers) {
-//   const sqlStr = 'select score from ev_users where username in (?,?,?)'
-//   const player = [winner].concat(losers)
-//   return new Promise((resolve, reject) => {
-//     db.query(sqlStr, player, (err, results) => {
-//       console.log("🚀 ~ db.query1 ~ results:", results)
-//       if (err) return reject(err)
-//       if (results.length !== 3) return reject('获取玩家信息失败')
-//       const params = [
-//         winner, results[0].score + 1000,
-//         losers[0], results[1].score - 500,
-//         losers[1], results[2].score - 500,
-//         winner, losers[0], losers[1]
-//       ];
-//       const sqlStr1 = `
-//         UPDATE ev_users SET score = CASE username
-//         WHEN ? THEN ?
-//         WHEN ? THEN ?
-//         WHEN ? THEN ?
-//         ELSE score
-//         END
-//         WHERE username IN (?, ?, ?);
-//       `;
-//       db.query(sqlStr1, params, (err, results) => {
-//         console.log("🚀 ~ db.query2 ~ results:", results)
-//         if (err) return reject(err)
-//         if (results.affectedRows !== 3) return reject('数据更新失败！')
-//         const sqlStr2 = `SELECT * FROM ev_users WHERE username in (?,?,?)`;
-//         db.query(sqlStr2, player, (err, results) => {
-//           console.log("🚀 ~ db.query3 ~ results:", results)
-//           if (err) return reject(err)
-//           if (results.length !== 3) return reject('数据查询失败！')
-//           resolve(results)
-//         })
-//       })
-//     })
-//   })
-// }
 const db = require('../db/index')  //连接数据库
 async function calculateScore(winner, losers) { // 异步函数处理事务，游戏结算  
   const connection = await db.getConnection();
