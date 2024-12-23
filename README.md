@@ -52,6 +52,6 @@
    <img src="https://github.com/Fat2man/frontend-gameHall/blob/main/.image/1734958636633.jpg" alt="Image 6" >
    <img src="https://github.com/Fat2man/frontend-gameHall/blob/main/.image/1734958750569.jpg" alt="Image 7" >
 </div>
-后端GitHub地址传送门：https://github.com/Fat2man/backend-gameHall
+前端代码GitHub地址传送门：https://github.com/Fat2man/frontend-gameHall
 
 需要改进的有很多，请大家可以多提提意见。后续我会不断改进，如果觉得还可以，请star，你们的star是我前进的动力。   
