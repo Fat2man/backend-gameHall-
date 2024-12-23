@@ -17,9 +17,7 @@ const storage = multer.diskStorage({
 // 使用Multer中间件配置上传
 const upload = multer({ storage: storage })
 router.post('/reguser', expressJoi(reg_schema), user_hanlder.reguser)
-
 router.post('/login', expressJoi(login_schema), user_hanlder.login)
-
 router.post('/uploadPicture', upload.single('file'), user_hanlder.uploadPicture)
 
 module.exports = router

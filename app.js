@@ -44,7 +44,21 @@ const io = new Server(httpServer, {
 const userList = {}  //连接websocket用户对象列表
 const rooms = {} //房间列表
 const playHistory = {}  //每个房间玩家出牌历史记录
-let timer  // timer 倒计时变量  
+let timer  // timer 倒计时变量        
+app.get('/users/count', (req, res) => {  //获取当前聊天室与斗地主在线人数
+  const chatUsers = Object.keys(userList).length;
+  let roomUsers = 0;
+  Object.values(rooms).forEach(room => {
+    roomUsers += Object.keys(room).length;
+  });
+  res.send({
+    status: 0,
+    data: {
+      chatUsers,
+      roomUsers
+    }
+  });
+});
 io.on("connection", (socket) => { //为io实例添加处理事件
   socket.on('send', data => {
     io.emit('news', data)
@@ -79,6 +93,26 @@ io.on("connection", (socket) => { //为io实例添加处理事件
       io.emit("create-join-Room", rooms)  //触发新建/加入房间事件
     }
     socket.emit('enterRoom', rooms[roomName])
+  })
+  socket.on('quickMatch', (playerInfo) => {
+    // 遍历所有房间寻找可加入的房间
+    for (const roomName in rooms) {
+      const room = rooms[roomName];
+      const roomUsers = Object.keys(room).length;
+      // 检查房间是否满足条件：无密码且人数小于3
+      if (!room[Object.keys(room)[0]].roomPwd && roomUsers < 3) {
+        // 使用现有房间名称更新roomInfo
+        playerInfo.roomName = roomName;
+        // 将用户加入找到的房间
+        socket.roomName = roomName;
+        rooms[roomName][socket.id] = { ...playerInfo, Homeowner: false };
+        socket.join(roomName);
+        // 发送相关事件通知
+        io.emit("create-join-Room", rooms);
+        socket.emit('enterRoom', rooms[roomName]);
+        return;
+      }
+    }
   })
   socket.on('getRoomUser', () => {  //获取房间成员信息
     io.emit('roomUser', rooms[socket.roomName])

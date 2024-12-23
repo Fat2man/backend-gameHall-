@@ -30,10 +30,8 @@ exports.updatePassword = async (req, res) => {
     const sqlStr = 'select * from ev_users where id =? '
     const [results] = await db.query(sqlStr, req.user.id)
     if (results.length !== 1) return res.cc('用户不存在')
-
     const compareResult = bcrypt.compareSync(req.body.oldPwd, results[0].password)
     if (!compareResult) return res.cc('旧密码错误')
-
     const sql = 'update ev_users set password = ? where id = ?'
     const newPwd = bcrypt.hashSync(req.body.newPwd, 10)
     const [updateResults] = await db.query(sql, [newPwd, req.user.id])

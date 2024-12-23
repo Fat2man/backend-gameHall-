@@ -27,6 +27,7 @@ exports.reguser = async (req, res) => {
 }
 exports.login = async (req, res) => {
   const userinfo = req.body
+  console.log(userinfo, 'userinfo');
   const sqlStr = 'select * from ev_users where username = ?'
   try {
     const [results] = await db.query(sqlStr, userinfo.username)

@@ -40,8 +40,3 @@ exports.update_password_schema = {
     newPwd: joi.not(joi.ref('oldPwd')).concat(password)
   }
 }
-// exports.update_avatar_schema = {
-//   body: {
-//     file
-//   }
-// }
